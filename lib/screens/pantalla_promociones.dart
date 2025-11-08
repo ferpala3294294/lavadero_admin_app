@@ -1,121 +1,275 @@
 import 'package:flutter/material.dart';
-import 'pantalla_estadisticas.dart';
-import 'pantalla_patentes.dart';
+import '../widgets/menu_lateral.dart';
 
-class PantallaPromociones extends StatelessWidget {
+class PantallaPromociones extends StatefulWidget {
   const PantallaPromociones({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final promociones = [
-      {
-        'titulo': '🎉 15% de descuento',
-        'descripcion': 'Aplica a clientes frecuentes con más de 5 lavados al mes.',
-        'color1': Colors.blueAccent,
-        'color2': Colors.lightBlueAccent,
-      },
-      {
-        'titulo': '🚗 Promo 2x1',
-        'descripcion': 'Vení el fin de semana y lavá 2 vehículos por el precio de 1.',
-        'color1': Colors.deepPurpleAccent,
-        'color2': Colors.purpleAccent,
-      },
-      {
-        'titulo': '💦 Lavado Express Gratis',
-        'descripcion': 'Con cualquier lavado completo de lunes a miércoles.',
-        'color1': Colors.teal,
-        'color2': Colors.cyan,
-      },
-    ];
+  State<PantallaPromociones> createState() => _PantallaPromocionesState();
+}
 
+class _PantallaPromocionesState extends State<PantallaPromociones> {
+  List<Map<String, dynamic>> promos = [
+    {"titulo": "🎉 15% de descuento", "desc": "Clientes frecuentes"},
+    {"titulo": "🎁 Promo 2x1", "desc": "Fin de semana"},
+    {"titulo": "💦 Lavado Express Gratis", "desc": "Lun–Mié"},
+  ];
+
+  final tituloCtrl = TextEditingController();
+  final descCtrl = TextEditingController();
+  final diasCtrl = TextEditingController(text: "7");
+
+  // ✅ ICONOS AUTOMÁTICOS
+  String getIconForTitle(String title) {
+    final t = title.toLowerCase();
+
+    if (t.contains("lavado")) return "🚗";
+    if (t.contains("promo") || t.contains("2x1")) return "🎁";
+    if (t.contains("descuento") || t.contains("%")) return "💸";
+    if (t.contains("gratis")) return "💦";
+    if (t.contains("express") || t.contains("exprés")) return "⚡";
+
+    return "⭐"; // default
+  }
+
+  // ✅ POPUP DE EDICIÓN
+  void _editarPromo(int index) {
+    final promo = promos[index];
+
+    tituloCtrl.text = promo["titulo"].replaceAll(RegExp(r"^\S+ "), ""); // saca el icono
+    descCtrl.text = promo["desc"];
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF112233),
+          title: const Text("Editar Promoción",
+              style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: tituloCtrl,
+                decoration: const InputDecoration(
+                  labelText: "Título",
+                  labelStyle: TextStyle(color: Colors.white70),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: descCtrl,
+                decoration: const InputDecoration(
+                  labelText: "Descripción",
+                  labelStyle: TextStyle(color: Colors.white70),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Cancelar", style: TextStyle(color: Colors.red))),
+            TextButton(
+              onPressed: () {
+                final icono = getIconForTitle(tituloCtrl.text);
+
+                setState(() {
+                  promos[index] = {
+                    "titulo": "$icono ${tituloCtrl.text}",
+                    "desc": descCtrl.text,
+                  };
+                });
+
+                Navigator.pop(ctx);
+              },
+              child: const Text("Guardar",
+                  style: TextStyle(color: Colors.lightBlue)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Promociones')),
+      backgroundColor: const Color(0xFF0A192F),
       body: Row(
         children: [
-          // Menú lateral
-          Container(
-            width: 220,
-            color: theme.scaffoldBackgroundColor,
-            child: Column(
-              children: [
-                ListTile(
-                  title: const Text('Estadísticas'),
-                  textColor: Colors.grey,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaEstadisticas()));
-                  },
-                ),
-                ListTile(
-                  title: const Text('Patentes'),
-                  textColor: Colors.grey,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaPatentes()));
-                  },
-                ),
-                ListTile(
-                  title: const Text('Promociones'),
-                  textColor: Colors.white,
-                  tileColor: Colors.blueGrey.shade800,
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
-          // Contenido principal
+          MenuLateral(seleccionado: "promociones"),
+
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '🎯 Promociones Especiales',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.primaryColor,
+                  const Text("🎯 Promociones Especiales",
+                      style: TextStyle(
+                          fontSize: 25,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+
+                  // ✅ input + guardar
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: tituloCtrl,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: "Título",
+                            labelStyle: TextStyle(color: Colors.white70),
+                            enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white38)),
+                            focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+
+                      SizedBox(
+                        width: 80,
+                        child: TextField(
+                          controller: diasCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            labelText: "Días",
+                            labelStyle: TextStyle(color: Colors.white70),
+                            enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white38)),
+                            focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white)),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          final icono = getIconForTitle(tituloCtrl.text);
+
+                          setState(() {
+                            promos.add({
+                              "titulo": "$icono ${tituloCtrl.text}",
+                              "desc":
+                                  "${descCtrl.text} (${diasCtrl.text} días)",
+                            });
+                          });
+
+                          tituloCtrl.clear();
+                          descCtrl.clear();
+                          diasCtrl.text = "7";
+                        },
+                        child: const Text("Guardar"),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  TextField(
+                    controller: descCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: "Descripción",
+                      labelStyle: TextStyle(color: Colors.white70),
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white38)),
+                      focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white)),
                     ),
                   ),
+
                   const SizedBox(height: 20),
+
+                  // ✅ LISTADO DE PROMOS
                   Expanded(
-                    child: ListView.separated(
-                      itemCount: promociones.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 20),
-                      itemBuilder: (context, index) {
-                        final promo = promociones[index];
+                    child: ListView.builder(
+                      itemCount: promos.length,
+                      itemBuilder: (_, i) {
                         return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [promo['color1'] as Color, promo['color2'] as Color],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black26,
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                            color: Colors.blueGrey.withOpacity(.15),
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
+
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                promo['titulo'] as String,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                              // ✅ información
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(promos[i]["titulo"],
+                                        style: const TextStyle(
+                                            fontSize: 18,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold)),
+                                    const SizedBox(height: 4),
+                                    Text(promos[i]["desc"],
+                                        style: const TextStyle(
+                                            color: Colors.white70)),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                promo['descripcion'] as String,
-                                style: const TextStyle(color: Colors.white70),
-                              ),
+
+                              // ✅ MENÚ DE 3 PUNTITOS
+                              PopupMenuButton(
+                                color: const Color(0xFF112233),
+                                icon: const Icon(Icons.more_vert,
+                                    color: Colors.white70),
+                                itemBuilder: (_) => [
+                                  // ✅ EDITAR
+                                  PopupMenuItem(
+                                    value: "editar",
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.edit,
+                                            color: Colors.white70, size: 20),
+                                        SizedBox(width: 8),
+                                        Text("Editar",
+                                            style: TextStyle(
+                                                color: Colors.white)),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // ✅ ELIMINAR
+                                  PopupMenuItem(
+                                    value: "eliminar",
+                                    child: Row(
+                                      children: const [
+                                        Icon(Icons.delete,
+                                            color: Colors.redAccent, size: 20),
+                                        SizedBox(width: 8),
+                                        Text("Eliminar",
+                                            style:
+                                                TextStyle(color: Colors.red)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                onSelected: (value) {
+                                  if (value == "editar") {
+                                    _editarPromo(i);
+                                  } else if (value == "eliminar") {
+                                    setState(() {
+                                      promos.removeAt(i);
+                                    });
+                                  }
+                                },
+                              )
                             ],
                           ),
                         );

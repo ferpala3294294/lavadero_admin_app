@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'pantalla_estadisticas.dart';
-import 'pantalla_promociones.dart';
+import '../widgets/menu_lateral.dart';
+import 'patentes_listado.dart'; // ✅ Import del listado
 
 class PantallaPatentes extends StatelessWidget {
   const PantallaPatentes({Key? key}) : super(key: key);
@@ -8,97 +8,127 @@ class PantallaPatentes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TextEditingController controller = TextEditingController();
-    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar Patente')),
+      backgroundColor: const Color(0xFF0A192F),
       body: Row(
         children: [
-          // Menú lateral
-          Container(
-            width: 220,
-            color: theme.scaffoldBackgroundColor,
-            child: Column(
-              children: [
-                ListTile(
-                  title: const Text('Estadísticas'),
-                  textColor: Colors.grey,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaEstadisticas()));
-                  },
-                ),
-                ListTile(
-                  title: const Text('Patentes'),
-                  textColor: Colors.white,
-                  tileColor: Colors.blueGrey.shade800,
-                  onTap: () {},
-                ),
-                ListTile(
-                  title: const Text('Promociones'),
-                  textColor: Colors.grey,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaPromociones()));
-                  },
-                ),
-              ],
-            ),
-          ),
-          // Contenido principal
+
+          /// ✅ MENÚ LATERAL
+          MenuLateral(seleccionado: "patentes"),
+
+          /// ✅ CONTENIDO
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Ingresar Patente',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  
+                  const Text(
+                    "Ingresar Patente",
+                    style: TextStyle(
+                      fontSize: 28,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+
+                  const SizedBox(height: 30),
+
+                  /// ✅ Caja contenedora
                   Container(
-                    padding: const EdgeInsets.all(20),
+                    width: 450,
+                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 30),
                     decoration: BoxDecoration(
-                      color: theme.cardColor.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      color: const Color(0xFF152238),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
                       children: [
+
+                        /// ✅ Campo Patente
                         TextField(
                           controller: controller,
+                          style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            labelText: 'Patente',
-                            hintText: 'Ej: ABC123 / XYZ-987',
-                            prefixIcon: const Icon(Icons.directions_car),
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              final patente = controller.text.trim();
-                              if (patente.isNotEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Patente "$patente" registrada.')),
-                                );
-                                controller.clear();
-                              }
-                            },
-                            icon: const Icon(Icons.save),
-                            label: const Text('Guardar'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            labelText: "Patente",
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            prefixIcon: const Icon(Icons.directions_car, color: Colors.white70),
+                            filled: true,
+                            fillColor: const Color(0xFF1D2A3A),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.white24),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.white),
                             ),
                           ),
                         ),
+
+                        const SizedBox(height: 20),
+
+                        /// ✅ Botón Guardar
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              final patente = controller.text.trim();
+                              if (patente.isEmpty) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("✅ Patente $patente guardada"),
+                                ),
+                              );
+
+                              controller.clear();
+                            },
+                            icon: const Icon(Icons.lock_outline, size: 18),
+                            label: const Text(
+                              "Guardar",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0094FF),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        /// ✅ Botón VER (te lleva al listado)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PatentesListado(),
+                                ),
+                              );
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.white24),
+                              backgroundColor: const Color(0xFF2A3B4F),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              "Ver",
+                              style: TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                          ),
+                        ),
+
                       ],
                     ),
                   ),
