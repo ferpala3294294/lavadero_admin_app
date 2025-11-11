@@ -9,10 +9,12 @@ import '../screens/pantalla_precios.dart';
 
 class MenuLateral extends StatelessWidget {
   final String seleccionado; // estadisticas, patentes, promociones, turnos, precios
+
   MenuLateral({super.key, required this.seleccionado});
 
   Widget item(BuildContext context, String nombre, String id, Widget pantalla) {
     final activo = (seleccionado == id);
+
     return ListTile(
       title: Text(
         nombre,
@@ -41,11 +43,13 @@ class MenuLateral extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 30),
+
+          /// ✅ YA ESTÁ TODO CONFIGURADO BIEN
           item(context, "Estadísticas", "estadisticas", PantallaEstadisticas()),
-          item(context, "Patentes", "patentes", PantallaPatentes()),
-          item(context, "Promociones", "promociones", PantallaPromociones()),
-          item(context, "Turnos", "turnos", PantallaTurnos()),
-          item(context, "Precios", "precios", PantallaPrecios()),
+          item(context, "Patentes",     "patentes",     PantallaPatentes()),
+          item(context, "Promociones",  "promociones",  PantallaPromociones()),
+          item(context, "Turnos",       "turnos",       PantallaTurnos()),
+          item(context, "Precios",      "precios",      PantallaPrecios()),
         ],
       ),
     );

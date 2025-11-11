@@ -1,37 +1,43 @@
 import 'package:flutter/material.dart';
 import '../widgets/menu_lateral.dart';
+import '../services/patentes_service.dart';
 
-class PatentesListado extends StatelessWidget {
+class PatentesListado extends StatefulWidget {
   const PatentesListado({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // ⚠️ Lista temporal (después conexión a BD)
-    final List<String> patentes = [
-      "ABC123",
-      "AE458RT",
-      "KDZ901",
-      "BBQ210",
-      "GGX889",
-      "ASD441",
-      "HJK102",
-    ];
+  State<PatentesListado> createState() => _PatentesListadoState();
+}
 
+class _PatentesListadoState extends State<PatentesListado> {
+  late Future<List<Map<String, dynamic>>> patentesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _refrescar();
+  }
+
+  void _refrescar() {
+    setState(() {
+      patentesFuture = PatentesService.getPatentes();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A192F),
       body: Row(
         children: [
-          /// ✅ Menú lateral
           MenuLateral(seleccionado: "patentes"),
 
-          /// ✅ CONTENIDO
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// ✅ FILA TITULO + BOTÓN ELIMINAR TODO
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -44,34 +50,30 @@ class PatentesListado extends StatelessWidget {
                         ),
                       ),
 
-                      /// ✅ TACHITO DE ARRIBA A LA DERECHA
                       PopupMenuButton(
                         icon: const Icon(Icons.delete, color: Colors.redAccent),
                         color: const Color(0xFF1D2A3A),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
+                        itemBuilder: (_) => [
+                          const PopupMenuItem(
                             value: "eliminar_todo",
                             child: Row(
-                              children: const [
-                                Icon(Icons.delete_forever,
-                                    color: Colors.redAccent),
+                              children: [
+                                Icon(Icons.delete_forever, color: Colors.red),
                                 SizedBox(width: 10),
-                                Text("Eliminar TODO",
-                                    style: TextStyle(color: Colors.white)),
+                                Text("Eliminar TODO", style: TextStyle(color: Colors.white)),
                               ],
                             ),
                           )
                         ],
-                        onSelected: (value) {
+                        onSelected: (value) async {
                           if (value == "eliminar_todo") {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      "🗑️ Todas las patentes han sido eliminadas")),
-                            );
+                            final ok = await PatentesService.eliminarTodas();
+                            if (ok) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("✅ Todas las patentes eliminadas")),
+                              );
+                              _refrescar();
+                            }
                           }
                         },
                       ),
@@ -80,96 +82,104 @@ class PatentesListado extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                  /// ✅ LISTADO
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: patentes.length,
-                      itemBuilder: (context, i) {
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 18,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1D2A3A),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              /// ✅ ICONO + TEXTO
-                              Row(
-                                children: [
-                                  const Icon(Icons.directions_car,
-                                      color: Colors.white70),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    patentes[i],
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                    child: FutureBuilder(
+                      future: patentesFuture,
+                      builder: (_, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          );
+                        }
 
-                              /// ✅ BOTÓN DE 3 PUNTOS (EDITAR/ELIMINAR)
-                              PopupMenuButton(
-                                icon: const Icon(Icons.more_vert,
-                                    color: Colors.white70),
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const Center(
+                            child: Text(
+                              "No hay patentes registradas",
+                              style: TextStyle(color: Colors.white70, fontSize: 18),
+                            ),
+                          );
+                        }
+
+                        final patentes = snapshot.data!;
+
+                        return ListView.builder(
+                          itemCount: patentes.length,
+                          itemBuilder: (_, i) {
+                            final p = patentes[i];
+                            final id = p["id"];
+                            final patente = p["patente"];
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                              decoration: BoxDecoration(
                                 color: const Color(0xFF1D2A3A),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                onSelected: (value) {
-                                  if (value == "editar") {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            "✏️ Editar ${patentes[i]}"),
-                                      ),
-                                    );
-                                  } else if (value == "eliminar") {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            "🗑️ Eliminada ${patentes[i]}"),
-                                      ),
-                                    );
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  PopupMenuItem(
-                                    value: "editar",
-                                    child: Row(
-                                      children: const [
-                                        Icon(Icons.edit,
-                                            color: Colors.white70, size: 20),
-                                        SizedBox(width: 10),
-                                        Text("Editar",
-                                            style:
-                                                TextStyle(color: Colors.white)),
-                                      ],
-                                    ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.directions_car, color: Colors.white70),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        patente,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      )
+                                    ],
                                   ),
-                                  PopupMenuItem(
-                                    value: "eliminar",
-                                    child: Row(
-                                      children: const [
-                                        Icon(Icons.delete,
-                                            color: Colors.redAccent, size: 20),
-                                        SizedBox(width: 10),
-                                        Text("Eliminar",
-                                            style: TextStyle(color: Colors.red)),
-                                      ],
-                                    ),
+
+                                  PopupMenuButton(
+                                    color: const Color(0xFF1D2A3A),
+                                    icon: const Icon(Icons.more_vert, color: Colors.white70),
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: "editar",
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit, color: Colors.white70, size: 20),
+                                            SizedBox(width: 10),
+                                            Text("Editar", style: TextStyle(color: Colors.white)),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: "eliminar",
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                                            SizedBox(width: 10),
+                                            Text("Eliminar", style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                    onSelected: (value) async {
+                                      if (value == "eliminar") {
+                                        final ok = await PatentesService.eliminarPatente(id);
+                                        if (ok) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text("🗑️ Eliminada $patente")),
+                                          );
+                                          _refrescar();
+                                        }
+                                      }
+
+                                      if (value == "editar") {
+                                        _editarPatente(context, id, patente);
+                                      }
+                                    },
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         );
                       },
                     ),
@@ -178,6 +188,46 @@ class PatentesListado extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // ✅ Dialogo para editar patente
+  void _editarPatente(BuildContext context, int id, String actual) {
+    final controller = TextEditingController(text: actual);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF112233),
+        title: const Text("Editar Patente", style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            labelText: "Patente",
+            labelStyle: TextStyle(color: Colors.white70),
+          ),
+        ),
+        actions: [
+          TextButton(
+            child: const Text("Cancelar", style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.pop(context),
+          ),
+          TextButton(
+            child: const Text("Guardar", style: TextStyle(color: Colors.lightBlue)),
+            onPressed: () async {
+              final nueva = controller.text.trim();
+              if (nueva.isEmpty) return;
+
+              final ok = await PatentesService.actualizarPatente(id, nueva);
+              if (ok) {
+                Navigator.pop(context);
+                _refrescar();
+              }
+            },
+          )
         ],
       ),
     );

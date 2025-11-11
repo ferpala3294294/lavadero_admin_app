@@ -10,7 +10,6 @@ class PantallaEstadisticas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Obtener datos
     final turnos = turnosGlobal;
 
     int autos = turnos.where((t) => t["vehiculo"] == "Auto").length;
@@ -30,10 +29,9 @@ class PantallaEstadisticas extends StatelessWidget {
 
       body: Row(
         children: [
-          // ✅ MENÚ LATERAL CORRECTO
+
           MenuLateral(seleccionado: "estadisticas"),
 
-          // ✅ CONTENIDO
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -143,8 +141,7 @@ class PantallaEstadisticas extends StatelessWidget {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              const PantallaEstadisticasMensuales(),
+                          builder: (_) => PantallaEstadisticasMensuales(),
                         ),
                       ),
                       child: const Text(
